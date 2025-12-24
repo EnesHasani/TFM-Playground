@@ -102,7 +102,7 @@ class NanoTabPFNClassifier():
         self.feature_preprocessor = get_feature_preprocessor(X_train)
         self.X_train = self.feature_preprocessor.fit_transform(X_train)
         self.y_train = y_train
-        self.num_classes = max(set(y_train))+1
+        self.num_classes = len(np.unique(y_train))
 
     def predict(self, X_test: np.ndarray) -> np.ndarray:
         """ calls predit_proba and picks the class with the highest probability for each datapoint """
