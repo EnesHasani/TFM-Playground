@@ -127,6 +127,7 @@ def train(
                 observational_query_labels = scm_dataset.get_observational_query_set_labels()
                 y_j = full_data.get('y_j')
                 y_ns = full_data.get('y_ns')
+                y_ns_soft = full_data.get('y_ns_soft')
                 single_eval_pos = scm_dataset.train_size
 
                 model.train()
@@ -143,10 +144,20 @@ def train(
                     target_source = y_j
                 elif model_name == 'NanoNsPFN' and y_ns is not None:
                     target_source = y_ns
+                elif model_name == 'NanoNssPFN' and y_ns_soft is not None:
+                    target_source = y_ns_soft
 
                 if classification_task:
-                    tgt = target_source.reshape((-1,)).to(torch.long).to(device)
-                    output = output.view(-1, output.shape[-1])
+                    # For NanoNssPFN, use soft labels (no .long() conversion)
+                    if model_name == 'NanoNssPFN' and y_ns_soft is not None:
+                        # target_source is [batch_size, num_samples, 2] soft labels
+                        tgt = target_source.to(device)
+                        
+                        output = output.view(-1, output.shape[-1])
+                        tgt = tgt.view(-1, tgt.shape[-1])
+                    else:
+                        tgt = target_source.reshape((-1,)).to(torch.long).to(device)
+                        output = output.view(-1, output.shape[-1])
                 else:
                     # Minimal regression support (no extra metrics)
                     tgt = target_source.to(device)
@@ -155,7 +166,6 @@ def train(
                 loss = losses.mean() / accumulate_gradients
                 loss.backward()
                 total_loss += loss.cpu().detach().item() * accumulate_gradients
-
                 # Metrics (classification only)
                 if classification_task:
                     output_detached = output.detach()
