@@ -93,7 +93,6 @@ class WandbLoggerCallback(BaseLoggerCallback):
                 name=name,
                 group=group,
                 tags=tags,
-                id=name,
                 config=config,
                 dir=log_dir,
                 resume="allow"
